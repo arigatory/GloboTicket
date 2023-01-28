@@ -10,8 +10,8 @@ namespace GloboTicket.Integration.MessagingBus
 {
     public class AzServiceBusMessageBus: IMessageBus
     {
-        private string connectionString = 
-            "Endpoint=sb://<your-namespace>.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=<your_key>";
+        //TODO: read from settings
+        private string connectionString = "Endpoint=sb://<your-namespace>.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=<your_key>";
 
         public async Task PublishMessage(IntegrationBaseMessage message, string topicName)
         {

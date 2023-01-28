@@ -27,7 +27,7 @@ namespace GloboTicket.Services.Discount.Repositories
                 await _discountDbContext.Coupons.Where(x => x.CouponId == couponId).FirstOrDefaultAsync();
 
             if (couponToUpdate == null)
-                throw new Exception();
+                throw new Exception();//TODO custom exception
 
             couponToUpdate.AlreadyUsed = true;
             await _discountDbContext.SaveChangesAsync();
