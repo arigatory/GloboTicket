@@ -20,6 +20,7 @@ namespace GloboTicket.Services.ShoppingBasket.Services
         public async Task<Coupon> GetCoupon(Guid couponId)
         {
             var response = await client.GetAsync($"/api/discount/{couponId}");
+            // TODO: error handling here
             return await response.ReadContentAs<Coupon>();
         }
 
