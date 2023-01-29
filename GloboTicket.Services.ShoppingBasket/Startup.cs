@@ -14,6 +14,7 @@ using System;
 using System.Net.Http;
 using Polly;
 using Polly.Extensions.Http;
+using GloboTicket.Services.ShoppingBasket.Worker;
 
 namespace GloboTicket.Services.ShoppingBasket
 {
@@ -32,6 +33,13 @@ namespace GloboTicket.Services.ShoppingBasket
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+            services.AddHostedService<ServiceBusListener>();
+
+            var optionsBuilder = new DbContextOptionsBuilder<ShoppingBasketDbContext>();
+            optionsBuilder.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+
+            services.AddSingleton(new BasketLinesIntegrationRepository(optionsBuilder.Options));
+
             services.AddScoped<IBasketRepository, BasketRepository>();
             services.AddScoped<IBasketLinesRepository, BasketLinesRepository>();
             services.AddScoped<IEventRepository, EventRepository>();
@@ -43,7 +51,9 @@ namespace GloboTicket.Services.ShoppingBasket
                 c.BaseAddress = new Uri(Configuration["ApiConfigs:EventCatalog:Uri"]));
 
             services.AddHttpClient<IDiscountService, DiscountService>(c =>
-                c.BaseAddress = new Uri(Configuration["ApiConfigs:Discount:Uri"]));
+                c.BaseAddress = new Uri(Configuration["ApiConfigs:Discount:Uri"]))
+                .AddPolicyHandler(GetRetryPolicy())
+                .AddPolicyHandler(GetCircuitBreakerPolicy());
 
             services.AddDbContext<ShoppingBasketDbContext>(options =>
             {
@@ -81,6 +91,24 @@ namespace GloboTicket.Services.ShoppingBasket
             {
                 endpoints.MapControllers();
             });
+        }
+
+        private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+        {
+            return HttpPolicyExtensions.HandleTransientHttpError()
+                .WaitAndRetryAsync(5,
+                    retryAttempt => TimeSpan.FromMilliseconds(Math.Pow(1.5, retryAttempt) * 1000),
+                    (_, waitingTime) =>
+                    {
+                        Console.WriteLine("Retrying due to Polly retry policy");
+                    });
+        }
+
+        private static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
+        {
+            return HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .CircuitBreakerAsync(3, TimeSpan.FromSeconds(15));
         }
     }
 }

@@ -96,8 +96,7 @@ namespace GloboTicket.Services.ShoppingBasket.Controllers
                     return BadRequest();
                 }
 
-                BasketCheckoutMessage basketCheckoutMessage = 
-                    mapper.Map<BasketCheckoutMessage>(basketCheckout);
+                BasketCheckoutMessage basketCheckoutMessage = mapper.Map<BasketCheckoutMessage>(basketCheckout);
                 basketCheckoutMessage.BasketLines = new List<BasketLineMessage>();
                 int total = 0;
 

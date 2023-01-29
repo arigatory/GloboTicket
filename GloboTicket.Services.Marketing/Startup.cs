@@ -37,7 +37,6 @@ namespace GloboTicket.Services.Marketing
 
             services.AddSingleton(new BasketChangeEventRepository(optionsBuilder.Options));
 
-
             services.AddScoped<IBasketChangeEventRepository, BasketChangeEventRepository>();
 
             services.AddHttpClient<IBasketChangeEventService, BasketChangeEventService>(c =>

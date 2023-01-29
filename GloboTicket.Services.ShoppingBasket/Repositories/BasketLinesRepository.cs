@@ -57,5 +57,19 @@ namespace GloboTicket.Services.ShoppingBasket.Repositories
         {
             return (await shoppingBasketDbContext.SaveChangesAsync() > 0);
         }
+
+        public async Task UpdatePricesForIntegrationEvent(Models.PriceUpdate priceUpdate)
+        {
+            var basketLinesToUpdate = shoppingBasketDbContext.BasketLines.Where(x => x.EventId == priceUpdate.EventId);
+
+            await basketLinesToUpdate.ForEachAsync((basketLineToUpdate) =>
+                basketLineToUpdate.Price = priceUpdate.Price
+            );
+            //foreach (var basketLineToUpdate in basketLinesToUpdate)
+            //{
+            //    basketLineToUpdate.Price = priceUpdate.Price;
+            //}
+            await SaveChanges();
+        }
     }
 }
