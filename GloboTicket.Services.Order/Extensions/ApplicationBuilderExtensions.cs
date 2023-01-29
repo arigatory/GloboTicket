@@ -7,27 +7,27 @@ namespace GloboTicket.Services.Ordering.Extensions
 {
     public static class ApplicationBuilderExtensions
     {
-        public static IAzServiceBusConsumer Consumer { get; set; }
+        public static IAzServiceBusConsumer ServiceBusConsumer { get; set; }
 
         public static IApplicationBuilder UseAzServiceBusConsumer(this IApplicationBuilder app)
         {
-            Consumer = app.ApplicationServices.GetService<IAzServiceBusConsumer>();
-            var life = app.ApplicationServices.GetService<IHostApplicationLifetime>();
+            ServiceBusConsumer = app.ApplicationServices.GetService<IAzServiceBusConsumer>();
+            var hostApplicationLifetime = app.ApplicationServices.GetService<IHostApplicationLifetime>();
 
-            life.ApplicationStarted.Register(OnStarted);
-            life.ApplicationStopping.Register(OnStopping);
+            hostApplicationLifetime.ApplicationStarted.Register(OnStarted);
+            hostApplicationLifetime.ApplicationStopping.Register(OnStopping);
 
             return app;
         }
 
         private static void OnStarted()
         {
-            Consumer.Start();
+            ServiceBusConsumer.Start();
         }
 
         private static void OnStopping()
         {
-            Consumer.Stop();
+            ServiceBusConsumer.Stop();
         }
     }
 }

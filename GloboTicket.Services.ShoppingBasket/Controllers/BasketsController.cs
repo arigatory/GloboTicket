@@ -10,10 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using GloboTicket.Grpc;
-using Grpc.Net.Client;
 using Microsoft.AspNetCore.Http;
-using Coupon = GloboTicket.Services.ShoppingBasket.Models.Coupon;
+using Polly.CircuitBreaker;
 
 namespace GloboTicket.Services.ShoppingBasket.Controllers
 {
@@ -24,14 +22,14 @@ namespace GloboTicket.Services.ShoppingBasket.Controllers
         private readonly IBasketRepository basketRepository;
         private readonly IMapper mapper;
         private readonly IMessageBus messageBus;
-        //private readonly DiscountService discountService;
+        private readonly IDiscountService discountService;
 
-        public BasketsController(IBasketRepository basketRepository, IMapper mapper, IMessageBus messageBus)//, DiscountService discountService)
+        public BasketsController(IBasketRepository basketRepository, IMapper mapper, IMessageBus messageBus, IDiscountService discountService)
         {
             this.basketRepository = basketRepository;
             this.mapper = mapper;
             this.messageBus = messageBus;
-           // this.discountService = discountService;
+            this.discountService = discountService;
         }
 
         [HttpGet("{basketId}", Name = "GetBasket")]
@@ -90,8 +88,6 @@ namespace GloboTicket.Services.ShoppingBasket.Controllers
         {
             try
             {
-
-
                 //based on basket checkout, fetch the basket lines from repo
                 var basket = await basketRepository.GetBasketById(basketCheckout.BasketId);
 
@@ -118,14 +114,14 @@ namespace GloboTicket.Services.ShoppingBasket.Controllers
                     basketCheckoutMessage.BasketLines.Add(basketLineMessage);
                 }
 
-                //apply discountt by talking to the discount service
+                //apply discount by talking to the discount service
                 Coupon coupon = null;
-                
-                var channel = GrpcChannel.ForAddress("https://localhost:5007");
 
-                DiscountService discountService = new DiscountService(new Discounts.DiscountsClient(channel));
+                //if (basket.CouponId.HasValue)
+                //    coupon = await discountService.GetCoupon(basket.CouponId.Value);
+
                 if (basket.CouponId.HasValue)
-                    coupon = await discountService.GetCoupon(basket.CouponId.Value);
+                    coupon = await discountService.GetCouponWithError(basket.CouponId.Value);
 
                 if (coupon != null)
                 {
@@ -148,6 +144,12 @@ namespace GloboTicket.Services.ShoppingBasket.Controllers
 
                 await basketRepository.ClearBasket(basketCheckout.BasketId);
                 return Accepted(basketCheckoutMessage);
+            }
+            catch(BrokenCircuitException ex)
+            {
+                string message = ex.Message;
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.StackTrace);
+
             }
             catch (Exception e)
             {

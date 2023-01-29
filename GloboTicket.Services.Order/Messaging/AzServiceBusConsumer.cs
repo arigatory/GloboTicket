@@ -52,15 +52,6 @@ namespace GloboTicket.Services.Ordering.Messaging
             orderPaymentUpdateMessageReceiverClient.RegisterMessageHandler(OnOrderPaymentUpdateReceived, messageHandlerOptions);
         }
 
-        private async Task OnOrderPaymentUpdateReceived(Message message, CancellationToken arg2)
-        {
-            var body = Encoding.UTF8.GetString(message.Body);//json from service bus
-            OrderPaymentUpdateMessage orderPaymentUpdateMessage =
-                JsonConvert.DeserializeObject<OrderPaymentUpdateMessage>(body);
-
-            await _orderRepository.UpdateOrderPaymentStatus(orderPaymentUpdateMessage.OrderId, orderPaymentUpdateMessage.PaymentSuccess);
-        }
-
         private async Task OnCheckoutMessageReceived(Message message, CancellationToken arg2)
         {
             var body = Encoding.UTF8.GetString(message.Body);//json from service bus
@@ -100,6 +91,15 @@ namespace GloboTicket.Services.Ordering.Messaging
                 Console.WriteLine(e);
                 throw;
             }
+        }
+
+        private async Task OnOrderPaymentUpdateReceived(Message message, CancellationToken arg2)
+        {
+            var body = Encoding.UTF8.GetString(message.Body);//json from service bus
+            OrderPaymentUpdateMessage orderPaymentUpdateMessage =
+                JsonConvert.DeserializeObject<OrderPaymentUpdateMessage>(body);
+
+            await _orderRepository.UpdateOrderPaymentStatus(orderPaymentUpdateMessage.OrderId, orderPaymentUpdateMessage.PaymentSuccess);
         }
 
         private Task OnServiceBusException(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
