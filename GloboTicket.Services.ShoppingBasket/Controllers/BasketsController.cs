@@ -96,7 +96,8 @@ namespace GloboTicket.Services.ShoppingBasket.Controllers
                     return BadRequest();
                 }
 
-                BasketCheckoutMessage basketCheckoutMessage = mapper.Map<BasketCheckoutMessage>(basketCheckout);
+                BasketCheckoutMessage basketCheckoutMessage = 
+                    mapper.Map<BasketCheckoutMessage>(basketCheckout);
                 basketCheckoutMessage.BasketLines = new List<BasketLineMessage>();
                 int total = 0;
 
@@ -117,11 +118,11 @@ namespace GloboTicket.Services.ShoppingBasket.Controllers
                 //apply discount by talking to the discount service
                 Coupon coupon = null;
 
-                if (basket.CouponId.HasValue)
-                    coupon = await discountService.GetCoupon(basket.CouponId.Value);
-
                 //if (basket.CouponId.HasValue)
-                //    coupon = await discountService.GetCouponWithError(basket.CouponId.Value);
+                //    coupon = await discountService.GetCoupon(basket.CouponId.Value);
+
+                if (basket.CouponId.HasValue)
+                    coupon = await discountService.GetCouponWithError(basket.CouponId.Value);
 
                 if (coupon != null)
                 {

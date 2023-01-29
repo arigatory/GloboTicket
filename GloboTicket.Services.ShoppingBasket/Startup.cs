@@ -43,9 +43,7 @@ namespace GloboTicket.Services.ShoppingBasket
                 c.BaseAddress = new Uri(Configuration["ApiConfigs:EventCatalog:Uri"]));
 
             services.AddHttpClient<IDiscountService, DiscountService>(c =>
-                c.BaseAddress = new Uri(Configuration["ApiConfigs:Discount:Uri"]))
-                .AddPolicyHandler(GetRetryPolicy())
-                .AddPolicyHandler(GetCircuitBreakerPolicy());
+                c.BaseAddress = new Uri(Configuration["ApiConfigs:Discount:Uri"]));
 
             services.AddDbContext<ShoppingBasketDbContext>(options =>
             {
@@ -83,24 +81,6 @@ namespace GloboTicket.Services.ShoppingBasket
             {
                 endpoints.MapControllers();
             });
-        }
-
-        private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
-        {
-            return HttpPolicyExtensions.HandleTransientHttpError()
-                .WaitAndRetryAsync(5,
-                    retryAttempt => TimeSpan.FromMilliseconds(Math.Pow(1.5, retryAttempt) * 1000),
-                    (_, waitingTime) =>
-                    {
-                        Console.WriteLine("Retrying due to Polly retry policy");
-                    });
-        }
-
-        private static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
-        {
-            return HttpPolicyExtensions
-                .HandleTransientHttpError()
-                .CircuitBreakerAsync(3, TimeSpan.FromSeconds(15));
         }
     }
 }
