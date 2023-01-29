@@ -1,4 +1,5 @@
 using AutoMapper;
+using GloboTicket.Integration.MessagingBus;
 using GloboTicket.Services.EventCatalog.DbContexts;
 using GloboTicket.Services.EventCatalog.Repositories;
 using Microsoft.AspNetCore.Builder;
@@ -9,9 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System;
-using System.Net.Http;
-using Polly;
-using Polly.Extensions.Http;
 
 namespace GloboTicket.Services.EventCatalog
 {
@@ -33,6 +31,9 @@ namespace GloboTicket.Services.EventCatalog
             services.AddScoped<IEventRepository, EventRepository>();
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+            services.AddSingleton<IMessageBus, AzServiceBusMessageBus>();
+
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
